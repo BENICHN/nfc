@@ -89,6 +89,16 @@ T **create2DArray(int w, int h, T value)
 }
 
 template <typename T>
+void delete2DArray(int w, int h, T** a)
+{
+    for (int i = 0; i < h; i++)
+    {
+        delete[] a[i];
+    }
+    delete[] a;
+}
+
+template <typename T>
 T newton(int steps, T (*f)(T), T (*jf)(T), T x0)
 {
     T x = x0;
@@ -165,11 +175,14 @@ int main(int argc, char const *argv[])
 {
     int w = 512;
     int h = 512;
+    int** f;
     char name[256];
     for (int i = 1; i <= 100; i++)
     {
+        f = nf(w, h, 2 * i * i);
         sprintf(name, "ah%d.bmp", i);
-        writeBMP(name, w, h, nf(w, h, 2 * i * i));
+        writeBMP(name, w, h, f);
+        delete2DArray(w, h, f);
     }
     return 0;
 }
