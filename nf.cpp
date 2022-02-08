@@ -3,11 +3,33 @@
 #include <string.h>
 #include <iostream>
 #include <complex>
+#include <cairo/cairo.h>
 
 using namespace std;
 using namespace std::complex_literals;
 
 using C = complex<double>;
+
+void makePNG()
+{
+    cairo_surface_t *surface;
+    cairo_t *cr;
+
+    surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, 390, 60);
+    cr = cairo_create(surface);
+
+    cairo_set_source_rgb(cr, 0, 0, 0);
+    cairo_select_font_face(cr, "Sans", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
+    cairo_set_font_size(cr, 40.0);
+
+    cairo_move_to(cr, 10.0, 50.0);
+    cairo_show_text(cr, "Disziplin ist Macht.");
+
+    cairo_surface_write_to_png(surface, "image.png");
+
+    cairo_destroy(cr);
+    cairo_surface_destroy(surface);
+}
 
 void writeBMP(char *name, int w, int h, int **data)
 {
@@ -89,7 +111,7 @@ T **create2DArray(int w, int h, T value)
 }
 
 template <typename T>
-void delete2DArray(int w, int h, T** a)
+void delete2DArray(int w, int h, T **a)
 {
     for (int i = 0; i < h; i++)
     {
@@ -98,13 +120,17 @@ void delete2DArray(int w, int h, T** a)
     delete[] a;
 }
 
-template <typename T>
-T newton(int steps, T (*f)(T), T (*jf)(T), T x0)
+C newton(int steps, double toll, C (*f)(C), C (*jf)(C), C x0)
 {
-    T x = x0;
-    for (int i = 0; i < steps; i++)
+    C x = x0;
+    double diff = toll + 1.0;
+    int i = 0;
+    while (diff > toll && i < steps)
     {
-        x -= f(x) / jf(x);
+        C dif = f(x) / jf(x);
+        x -= dif;
+        diff = norm(dif);
+        i++;
     }
     return x;
 }
@@ -158,8 +184,8 @@ int **nf(int w, int h, double s)
     {
         for (int j = 0; j < w; j++)
         {
-            C z = complex<double>((double)i / s, (double)j / s);
-            C zp = newton(50, f, jf, z);
+            C z { (double)i / s, (double)j / s };
+            C zp = newton(100, 0.1, f, jf, z);
             for (int i = 0; i < 4; i++)
             {
                 dists[i] = norm(zp - roots[i]);
@@ -171,11 +197,11 @@ int **nf(int w, int h, double s)
     return fractal;
 }
 
-int main(int argc, char const *argv[])
+void makeFractal()
 {
     int w = 512;
     int h = 512;
-    int** f;
+    int **f;
     char name[256];
     for (int i = 1; i <= 100; i++)
     {
@@ -184,5 +210,10 @@ int main(int argc, char const *argv[])
         writeBMP(name, w, h, f);
         delete2DArray(w, h, f);
     }
+}
+
+int main(int argc, char const *argv[])
+{
+    makeFractal();
     return 0;
 }
